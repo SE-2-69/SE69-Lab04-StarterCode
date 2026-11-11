@@ -1,0 +1,140 @@
+openapi: 3.0.3
+info:
+  title: Lab Equipment Loan API
+  version: 0.1.0
+  description: |
+    SE69 Lab04 starter API.
+servers:
+  - url: http://localhost:8080
+paths:
+  /sessions:
+    post:
+      summary: Log in with HTTP Basic and get an access token
+      responses:
+        "201":
+          description: Token issued
+        "401":
+          description: Invalid username or password
+  /equipment:
+    get:
+      summary: Search for equipment
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching equipment (an empty list if none match)
+    post:
+      summary: Add equipment (staff only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EquipmentInput"
+      responses:
+        "201":
+          description: Equipment added; its URL is in the Location header
+        "400":
+          description: Missing or invalid name or category
+  /equipment/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get equipment details
+      responses:
+        "200":
+          description: Equipment found
+        "404":
+          description: Equipment doesn't exist
+    put:
+      summary: Modify equipment (staff only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EquipmentInput"
+      responses:
+        "200":
+          description: Equipment modified
+        "400":
+          description: Missing or invalid name or category
+        "404":
+          description: Equipment doesn't exist
+  /deleteEquipment/{id}:
+    get:
+      summary: Delete equipment (staff only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted, or an error message in the body
+  /loans:
+    get:
+      summary: List loans (students see only their own)
+      responses:
+        "200":
+          description: Loans visible to the caller
+    post:
+      summary: Borrow equipment (students only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [equipmentId]
+              properties:
+                equipmentId:
+                  type: integer
+      responses:
+        "201":
+          description: Loan created; its URL is in the Location header
+        "400":
+          description: Missing or unknown equipmentId
+        "409":
+          description: Equipment is already borrowed
+  /loans/{id}:
+    get:
+      summary: Get loan details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Loan found
+        "404":
+          description: Loan doesn't exist
+  /reports/usage:
+    get:
+      summary: Usage report (teachers only)
+      responses:
+        "200":
+          description: Report
+        "500":
+          description: Unexpected server error
+components:
+  schemas:
+    EquipmentInput:
+      type: object
+      required: [name, category]
+      properties:
+        name:
+          type: string
+        category:
+          type: string
